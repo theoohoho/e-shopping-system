@@ -1,24 +1,208 @@
 # E-shopping system
 模擬線上購物網站，產品僅提供電影，沒版權，沒通路，主要給我 high
 
+## Setup
+
+    npm install
+
+### Run express server
+
+    node server.js
+
+
 ## 功能
 ### 後台 - 登入系統/會員管理系統 - 用 FLASK ADMIN 來做
-- POST `/admin/login` 管理員登入
-- POST `/admin/logout` 管理員登出
-- POST `/admin/signup` 管理員註冊
+- POST `/api/v1/admin/login` 管理員登入
+  - request:
+    ```json
+    {
+      "username": "",
+      "password": ""
+    }
+    ```
+  - response:
+    ```json
+    {
+      "message": "Success"
+    }
+    ```
+- POST `/api/v1/admin/logout` 管理員登出
+  - response:
+    ```json
+    {
+      "message": "Success"
+    }
+    ```
+- POST `/api/v1/admin/signup` 管理員註冊
+  - request:
+    ```json
+    {
+      "username": "",
+      "password": "",
+      "email": ""
+    }
+    ```
+  - response:
+    ```json
+    {
+      "message": "Success"
+    }
+    ```
 
 ### 前台 - product page
-- POST `/signup` 註冊會員
-- POST `/login` 登入會員
-- POST `/logout` 登出會員
-- GET `/products` 取得產品列表
-- GET `/product/{product_id}` 取得產品資訊
-- POST `/cart` 加入單項產品至購物車
-- GET `/cart` 取得購物車內容
-- POST `/order` 結帳
-- GET `/order` 取得訂單列表
-- POST `/product/{product_id}/favorite` 加入產品至會員收藏
+#### 會員管理
+- POST `/api/v1/signup` 註冊會員
+  - request:
+    ```json
+    {
+      "username": "",
+      "password": "",
+      "email": ""
+    }
+    ```
+  - response:
+    ```json
+    {
+      "message": "Success"
+    }
+    ```
+- POST `/api/v1/login` 登入會員
+  - request:
+    ```json
+    {
+      "username": "",
+      "password": ""
+    }
+    ```
+  - response:
+    ```json
+    {
+      "message": "Success"
+    }
+    ```
+- POST `/api/v1/logout` 登出會員
+  - response:
+    ```json
+    {
+      "message": "Success"
+    }
+    ```
+#### 商品管理
+- GET `/api/v1/product` 取得產品列表
+  - response:
+    ```json
+    {
+      "data": [{
+        "product_id": "",
+        "product_name": "",
+        "product_price": "",
+        "product_type": "",
+        "image_url": ""
+      }],
+      "page": 0,
+      "current_count":0,
+      "total_count":0
+    }
+    ```
+- GET `/api/v1/product/{product_id}` 取得產品資訊
+  - response:
+    ```json
+    {
+      "product_id": "",
+      "product_name": "",
+      "product_price": "",
+      "product_type": "",
+      "product_qty": 0,
+      "image_url": ""
+    }
+    ```
+- POST `/api/v1/cart` 加入單項產品至購物車
+  - request:
+    ```json
+    {
+      "product_id": "",
+      "product_qty": 0,
+    }
+    ```
+  - response:
+      ```json
+      {
+        "cart_id": ""
+      }
+      ```
+- GET `/api/v1/cart/{cart_id}` 取得購物車內容
+   - response:
+      ```json
+      {
+        "data": [{
+          "product_id": "",
+          "product_name": "",
+          "product_qty": 0,
+          "product_price": "",
+        }],
+        "total": 0
+      }
+      ```
+#### 訂單管理
+- POST `/api/v1/order` 結帳
+  - request:
+    ```json
+    {
+      "shopping_cart":[
+        {
+          "product_id": "",
+          "product_qty": 0
+        },
+      ]
+    }
+    ```
+  - response:
+    ```json
+    {
+      "order_id": "",
+      "order_date": "",
+      "message": "Success"
+    }
+    ```
 
+- GET `/api/v1/order` 取得訂單列表
+  - response:
+    ```json
+    {
+      "data": [{
+        "order_id": "",
+        "order_amount": "",
+        "order_date": ""
+      }],
+      "page": 0,
+      "current_count":0,
+      "total_count":0
+    }
+    ```
+- POST `/api/v1/product/{product_id}/favorite` 加入產品至會員收藏
+  - response:
+      ```json
+      {
+        "product_id": "",
+        "message": "Success to add a new collect"
+      }
+      ```
+- GET `/api/v1/favorite` 會員收藏列表
+  - response:
+      ```json
+      {
+        "data": [{
+          "product_id": "",
+          "product_name": "",
+          "product_price": "",
+          "product_type": "",
+          "image_url": ""
+      }],
+        "page": 0,
+        "current_count":0,
+        "total_count":0
+      }
+      ```
 ## database table schema
 - customer
   - customer_id 客戶編號 VARCHAR(50) (PK)
