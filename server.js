@@ -1,8 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const app = express();
+const cors = require('cors');
 
 app.use(bodyParser.json())
+app.use(cors());
+
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/', function (req, res) {
   res.send('hello world');
