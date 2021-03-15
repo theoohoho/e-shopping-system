@@ -50,3 +50,19 @@ class OrderItems(BaseModel):
     product_id: str
     quantity: int
     price: int
+
+
+# Defined response pydantic model
+class BasePagnation(BaseModel):
+    data: List[Any]
+    current_page: int = 1
+    current_count: int = 0
+    total_count: int = 0
+
+
+class ResponseProductList(BasePagnation):
+    data: List[Product]
+
+
+class ResponseOrderList(BasePagnation):
+    data: List[Order]
