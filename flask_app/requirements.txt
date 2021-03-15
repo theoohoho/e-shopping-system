@@ -1,0 +1,4 @@
+sqlalchemy
+pydantic
+bs4
+requests
