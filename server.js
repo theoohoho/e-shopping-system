@@ -52,13 +52,19 @@ app.post('/api/v1/logout', (req, res, next) => {
 app.get('/api/v1/product', (req, res, next) => {
   res.json({
     "data": [{
-      "product_id": "",
-      "product_name": "",
-      "product_price": "",
-      "product_type": "",
-      "image_url": ""
+      "product_id": "f65b8846-3",
+      "product_name": "來去美國2",
+      "product_type": "喜剧",
+      "description": "",
+      "image_url": "https://localhost/xxxx.jpg",
+      "movie_runtime": "1h 50m",
+      "movie_score": "71.0",
+      "price": 710,
+      "release_date": "",
+      "source_url": "https://localhost/xxxxx",
+      "store_pcs": 5
     }],
-    "page": 0,
+    "current_page": 0,
     "current_count":0,
     "total_count":0
   })
@@ -66,12 +72,17 @@ app.get('/api/v1/product', (req, res, next) => {
 // 取得產品資訊
 app.get('/api/v1/product/{product_id}', (req, res, next) => {
   res.json({
-    "product_id": "",
-    "product_name": "",
-    "product_price": "",
-    "product_type": "",
-    "product_qty": 0,
-    "image_url": ""
+    "product_id": "f65b8846-3",
+    "product_name": "來去美國2",
+    "product_type": "喜剧",
+    "description": "",
+    "image_url": "https://localhost/xxxx.jpg",
+    "movie_runtime": "1h 50m",
+    "movie_score": "71.0",
+    "price": 710,
+    "release_date": "",
+    "source_url": "https://localhost/xxxxx",
+    "store_pcs": 5
   })
 })
 // 加入單項產品至購物車
@@ -108,7 +119,7 @@ app.get('/api/v1/order', (req, res, next) => {
       "order_amount": "",
       "order_date": ""
     }],
-    "page": 0,
+    "current_page": 0,
     "current_count":0,
     "total_count":0
   })
@@ -130,7 +141,7 @@ app.get('/api/v1/favorite', (req, res, next) => {
       "product_type": "",
       "image_url": ""
   }],
-    "page": 0,
+    "current_page": 0,
     "current_count":0,
     "total_count":0
   })
