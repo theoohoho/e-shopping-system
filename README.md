@@ -1,11 +1,13 @@
 # E-shopping system
 模擬線上購物網站，產品僅提供電影，沒版權，沒通路，主要給我 high
 
+目前提供 node.js 作為 mock server，另外也有以 python flask 開發的 api server 會作為未來正式版本使用
+
 ## Setup
 
     npm install
 
-### Run express server
+## Run express server
 
     node server.js
 
