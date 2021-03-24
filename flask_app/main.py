@@ -6,12 +6,16 @@ from sqlalchemy.orm import scoped_session
 from database import SessionLocal
 from crud.crud_product import product as product_operation
 from crud.crud_order import order as order_operation
+from crud.crud_cart_items import cart_items as cart_items_operation
 
 from schemas import (
     Product as ProductSchema,
     Order as OrderSchema,
+    CartItems as CartItemsSchema,
     ResponseOrderList,
-    ResponseProductList)
+    ResponseProductList,
+    ResponseCartList
+)
 
 
 app = Flask(__name__)
@@ -109,24 +113,65 @@ def get_product(product_id):
 @app.route('/api/v1/cart', methods=["POST"])
 def add_cart():
     """加入單項產品至購物車"""
-    print(request.json)
-    return jsonify({
-        "cart_id": ""
-    })
+    try:
+        body = request.json
+        product_id = body.get('product_id')
+        product_qty = body.get('product_qty')
+        if not product_qty or not product_id:
+            raise Exception('Request body is empty, please check your request message')
+
+        # check product quantity is valid
+        product = product_operation.get(db=app.session, filter_dict={
+            'product_id': product_id
+        })
+        if product_qty > product.store_pcs:
+            raise Exception('Product haven\'t enough piece to buy')
+
+        # create cart_items or update product quantity in cart_items
+        cart_item = cart_items_operation.get(db=app.session, filter_dict={
+            'product_id': product_id
+        })
+        if not cart_item:
+            new_cart_item = CartItemsSchema(product_id=product_id, product_qty=product_qty, customer_id='tmp_test')
+            cart_items_operation.create(db=app.session, obj_in=new_cart_item)
+        else:
+            cart_item.product_qty += product_qty
+            if cart_item.product_qty > product.store_pcs:
+                raise Exception('Exceeded product inventory quantity')
+            app.session.commit()
+
+        return jsonify({
+            "message": "Success to add product into shopping cart, please check your shopping cart"
+        })
+    except Exception:
+        raise
 
 
-@app.route('/api/v1/cart/<string:cart_id>', methods=["GET"])
-def get_cart_list(cart_id):
+@app.route('/api/v1/cart', methods=["GET"])
+def get_cart_list():
     """取得購物車內容"""
-    return jsonify({
-        "data": [{
-            "product_id": "",
-            "product_name": "",
-            "product_qty": 0,
-            "product_price": "",
-        }],
-        "total": 0
-    })
+    try:
+        query_result = []
+        total_price = 0
+        db_query = cart_items_operation.get_cart_item_with_product(app.session)
+
+        for cart_item, product in db_query:
+            product_total_price = cart_item.product_qty * product.price
+            total_price += product_total_price
+            query_result.append({
+                "product_id": cart_item.product_id,
+                "product_name": product.product_name,
+                "product_qty": cart_item.product_qty,
+                "product_total_price": product_total_price,
+            })
+
+        resp = ResponseCartList(
+            data=query_result,
+            total_price=total_price
+        ).dict()
+        return jsonify(resp)
+    except Exception:
+        raise
 
 
 @app.route('/api/v1/order', methods=["POST"])

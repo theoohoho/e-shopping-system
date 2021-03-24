@@ -52,6 +52,12 @@ class OrderItems(BaseModel):
     price: int
 
 
+class CartItems(BaseModel):
+    customer_id: str
+    product_id: str
+    product_qty: int
+
+
 # Defined response pydantic model
 class BasePagnation(BaseModel):
     data: List[Any]
@@ -66,3 +72,21 @@ class ResponseProductList(BasePagnation):
 
 class ResponseOrderList(BasePagnation):
     data: List[Order]
+
+
+class ResponseCartList(BaseModel):
+    """Cart list response format
+
+    expected data format as below:
+    {
+        data: [{
+            product_id: ,
+            product_name: ,
+            product_qty: 0,
+            product_price: ,
+        }],
+        total: 0
+    }
+    """
+    data: List[dict]
+    total_price: int

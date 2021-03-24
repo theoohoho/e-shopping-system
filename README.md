@@ -140,10 +140,10 @@
   - response:
       ```json
       {
-        "cart_id": ""
+        "message": "Success"
       }
       ```
-- GET `/api/v1/cart/{cart_id}` 取得購物車內容
+- GET `/api/v1/cart` 取得購物車內容
    - response:
       ```json
       {
