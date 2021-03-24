@@ -71,3 +71,12 @@ class OrderItems(Base):
     product_id = Column(VARCHAR(40), ForeignKey('product.product_id'), nullable=False)
     quantity = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
+
+
+class CartItems(Base):
+    __tablename__ = 'cart_items'
+    
+    id = Column(Integer, primary_key=True)
+    customer_id = Column(VARCHAR(50), nullable=False)
+    product_id = Column(VARCHAR(40), nullable=False)
+    product_qty = Column(Integer)
