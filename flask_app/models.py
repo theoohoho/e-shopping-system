@@ -66,7 +66,7 @@ class Order(Base):
 class OrderItems(Base):
     __tablename__ = 'order_items'
 
-    id = Column(VARCHAR, primary_key=True)
+    id = Column(Integer, primary_key=True)
     order_id = Column(VARCHAR(50), ForeignKey('order.order_id'), nullable=False, index=True)
     product_id = Column(VARCHAR(40), ForeignKey('product.product_id'), nullable=False)
     quantity = Column(Integer, nullable=False)

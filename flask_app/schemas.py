@@ -45,7 +45,6 @@ class Order(BaseModel):
 
 
 class OrderItems(BaseModel):
-    id: str
     order_id: str
     product_id: str
     quantity: int

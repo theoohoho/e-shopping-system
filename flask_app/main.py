@@ -2,6 +2,8 @@ from flask_cors import CORS
 from flask import Flask, jsonify, request, _app_ctx_stack
 
 from sqlalchemy.orm import scoped_session
+import uuid
+import datetime
 
 from database import SessionLocal
 from crud.crud_product import product as product_operation
@@ -12,6 +14,7 @@ from schemas import (
     Product as ProductSchema,
     Order as OrderSchema,
     CartItems as CartItemsSchema,
+    OrderItems as OrderItemsSchema,
     ResponseOrderList,
     ResponseProductList,
     ResponseCartList
@@ -177,12 +180,44 @@ def get_cart_list():
 @app.route('/api/v1/order', methods=["POST"])
 def order():
     """結帳"""
-    print(request.json)
-    return jsonify({
-        "order_id": "",
-        "order_date": "",
-        "message": "Success"
-    })
+    try:
+        # assume decoded token can get user_id
+        customer_id = 'tmp_test'
+        total_price = 0
+        order_id = str(uuid.uuid4())
+        order_time = datetime.datetime.now()
+        db_query = cart_items_operation.get_cart_item_with_product(db=app.session)
+
+        # transfer each cart_item to be order_item
+        order_items = []
+        for cart_item, product in db_query:
+            order_item_total_price = cart_item.product_qty * product.price
+            total_price += order_item_total_price
+            order_items.append(OrderItemsSchema(
+                order_id=order_id,
+                product_id=cart_item.product_id,
+                quantity=cart_item.product_qty,
+                price=order_item_total_price
+            ))
+        order_operation.add_order_items(db=app.session, obj_in=order_items)
+
+        # create order
+        order_operation.create(db=app.session, obj_in=OrderSchema(
+            order_id=order_id,
+            customer_id=customer_id,
+            total_price=total_price,
+            order_time=order_time
+        ))
+
+        app.session.commit()
+
+        return jsonify({
+            "order_id": order_id,
+            "order_date": str(order_time),
+            "message": "Success"
+        })
+    except Exception:
+        raise
 
 
 @app.route('/api/v1/order', methods=["GET"])
