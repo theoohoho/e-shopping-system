@@ -11,7 +11,6 @@ class Customer(BaseModel):
 
 
 class CustomerLoginHistory(BaseModel):
-    id: int
     customer_id: str
     login_time: datetime
     login_status: str

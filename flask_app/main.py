@@ -9,12 +9,15 @@ from database import SessionLocal
 from crud.crud_product import product as product_operation
 from crud.crud_order import order as order_operation
 from crud.crud_cart_items import cart_items as cart_items_operation
+from crud.crud_customer import customer as customer_operation
 
 from schemas import (
     Product as ProductSchema,
     Order as OrderSchema,
     CartItems as CartItemsSchema,
     OrderItems as OrderItemsSchema,
+    Customer as CustomerSchema,
+    CustomerLoginHistory as LoginHistorySchema,
     ResponseOrderList,
     ResponseProductList,
     ResponseCartList
@@ -76,9 +79,26 @@ def admin_signup():
 def user_signup():
     """註冊會員"""
     register_info = request.json
+    username = register_info.get('username')
+    password = register_info.get('password')
+    email = register_info.get('email')
+
+    # verify user existence
+    if customer_operation.get(db=app.session, filter_dict={"customer_name": username}):
+        raise Exception('User exists, please naming other username')
+
+    # create user
+    hashed_password = helper.hash_password(password)
+    customer = CustomerSchema(
+        customer_id=str(uuid.uuid4()),
+        customer_name=username,
+        hashed_password=hashed_password,
+        email=email,
+    )
+    customer_operation.create(db=app.session, obj_in=customer)
 
     return jsonify({
-        "message": "Success"
+        "message": f"Success to register user: {username}"
     })
 
 
@@ -88,21 +108,41 @@ def user_login():
     login_info = request.json
     username = login_info.get('username')
     password = login_info.get('password')
+    resp = {
+        "token": "",
+        "message": f"Login success: {username}"
+    }
 
     # get fake customer for debug mode
     if config.DEBUG_MODE:
-        username = fake_customer.get("user_id")
-    return jsonify({
-        "token": helper.gen_user_token(user_id=username),
-        "message": "Success"
-    })
+        resp['token'] = fake_customer.get("token")
+        return jsonify(resp)
+
+    # verify user existence and user password
+    customer = customer_operation.get(db=app.session, filter_dict={"customer_name": username})
+    if not customer:
+        raise Exception('User not found, please register first')
+    if not helper.verify_password(password=password, hashed_password=customer.hashed_password):
+        raise Exception('Invalid passsword, please insert right password')
+
+    # record user login history
+    login_history = LoginHistorySchema(
+        customer_id=customer.customer_id,
+        login_time=datetime.datetime.now(),
+        login_status='login',
+        ip_address=request.remote_addr,
+    )
+    customer_operation.create_login_history(db=app.session, obj_in=login_history)
+    resp['token'] = helper.gen_user_token(user_id=username)
+    return jsonify(resp)
 
 
 @app.route('/api/v1/logout', methods=["POST"])
 def user_logout():
     """登出會員"""
-    print(request.json)
     return jsonify({
+        "username": '',
+        "timestamp": datetime.datetime.now(),
         "message": "Success"
     })
 
