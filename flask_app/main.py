@@ -20,6 +20,8 @@ from schemas import (
     ResponseCartList
 )
 
+import config
+from utils import helper
 
 app = Flask(__name__)
 app.config.update(JSON_AS_ASCII=False)
@@ -30,6 +32,12 @@ CORS(app)
 app.session = scoped_session(
     SessionLocal, scopefunc=_app_ctx_stack.__ident_func__)
 
+# Aa a fake user for debug mode
+fake_customer = {
+    "user_id": 'fake_customer',
+    "username": 'fake_customer',
+    "token": helper.gen_user_token(user_id='fake_customer')
+}
 
 @app.route('/')
 def hello_world():
@@ -67,7 +75,8 @@ def admin_signup():
 @app.route('/api/v1/signup', methods=["POST"])
 def user_signup():
     """註冊會員"""
-    print(request.json)
+    register_info = request.json
+
     return jsonify({
         "message": "Success"
     })
@@ -76,8 +85,15 @@ def user_signup():
 @app.route('/api/v1/login', methods=["POST"])
 def user_login():
     """登入會員"""
-    print(request.json)
+    login_info = request.json
+    username = login_info.get('username')
+    password = login_info.get('password')
+
+    # get fake customer for debug mode
+    if config.DEBUG_MODE:
+        username = fake_customer.get("user_id")
     return jsonify({
+        "token": helper.gen_user_token(user_id=username),
         "message": "Success"
     })
 
@@ -117,6 +133,7 @@ def get_product(product_id):
 def add_cart():
     """加入單項產品至購物車"""
     try:
+        username = fake_customer.get("user_id") if config.DEBUG_MODE else None
         body = request.json
         product_id = body.get('product_id')
         product_qty = body.get('product_qty')
@@ -132,10 +149,15 @@ def add_cart():
 
         # create cart_items or update product quantity in cart_items
         cart_item = cart_items_operation.get(db=app.session, filter_dict={
-            'product_id': product_id
+            'product_id': product_id,
+            'cart_id': username
         })
         if not cart_item:
-            new_cart_item = CartItemsSchema(product_id=product_id, product_qty=product_qty, customer_id='tmp_test')
+            new_cart_item = CartItemsSchema(
+                product_id=product_id,
+                product_qty=product_qty,
+                cart_id=username
+            )
             cart_items_operation.create(db=app.session, obj_in=new_cart_item)
         else:
             cart_item.product_qty += product_qty
@@ -172,6 +194,10 @@ def get_cart_list():
             data=query_result,
             total_price=total_price
         ).dict()
+
+        # add cart token to target user shopping cart
+        resp['cart_token'] = helper.gen_shopping_cart_token(fake_customer.get("user_id"))
+
         return jsonify(resp)
     except Exception:
         raise
@@ -231,9 +257,9 @@ def get_order_list():
             "order_amount": "",
             "order_date": ""
         }],
-        "page": 0,
-        "current_count": 0,
-        "total_count": 0
+        "page": 1,
+        "current_count": len(result),
+        "total_count": len(result)
     }
     output_format['data'] = result
     return jsonify(output_format)
