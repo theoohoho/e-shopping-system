@@ -3,15 +3,15 @@ from typing import Optional, Any, List
 from datetime import datetime
 
 
-class Customer(BaseModel):
-    customer_id: str
-    customer_name: str
-    hashed_password: str
+class User(BaseModel):
+    user_id: str
+    username: str
+    password: str
     email: str
 
 
-class CustomerLoginHistory(BaseModel):
-    customer_id: str
+class UserLoginHistory(BaseModel):
+    user_id: str
     login_time: datetime
     login_status: str
     ip_address: str
@@ -38,7 +38,7 @@ class ProductType(BaseModel):
 
 class Order(BaseModel):
     order_id: str
-    customer_id: str
+    user_id: str
     total_price: int
     order_date: datetime
 

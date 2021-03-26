@@ -6,22 +6,22 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
-class Customer(Base):
-    __tablename__ = 'customer'
+class User(Base):
+    __tablename__ = 'user'
 
-    customer_id = Column(VARCHAR(50), primary_key=True)
-    customer_name = Column(VARCHAR(255), nullable=False)
-    hashed_password = Column(VARCHAR(255), nullable=False)
+    user_id = Column(VARCHAR(50), primary_key=True)
+    username = Column(VARCHAR(255), nullable=False)
+    password = Column(VARCHAR(255), nullable=False)
     email = Column(VARCHAR(255), nullable=False)
 
-    order = relationship('Order', backref='customer')
+    order = relationship('Order', backref='user')
 
 
-class CustomerLoginHistory(Base):
-    __tablename__ = 'customer_login_history'
+class UserLoginHistory(Base):
+    __tablename__ = 'user_login_history'
 
     id = Column(Integer, primary_key=True)
-    customer_id = Column(VARCHAR(50), nullable=False)
+    user_id = Column(VARCHAR(50), nullable=False)
     login_time = Column(DateTime, nullable=False)
     login_status = Column(VARCHAR(10), nullable=False)
     ip_address = Column(VARCHAR(10), )
@@ -56,7 +56,7 @@ class Order(Base):
     __tablename__ = 'order'
 
     order_id = Column(VARCHAR(50), primary_key=True)
-    customer_id = Column(VARCHAR(50), ForeignKey('customer.customer_id'))
+    user_id = Column(VARCHAR(50), ForeignKey('user.user_id'))
     total_price = Column(Integer, nullable=False)
     order_date = Column(DateTime, nullable=False)
 
@@ -75,7 +75,7 @@ class OrderItems(Base):
 
 class CartItems(Base):
     __tablename__ = 'cart_items'
-    
+
     id = Column(Integer, primary_key=True)
     cart_id = Column(VARCHAR(50), nullable=False)
     product_id = Column(VARCHAR(40), nullable=False)

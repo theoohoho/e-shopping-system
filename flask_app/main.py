@@ -9,15 +9,15 @@ from database import SessionLocal
 from crud.crud_product import product as product_operation
 from crud.crud_order import order as order_operation
 from crud.crud_cart_items import cart_items as cart_items_operation
-from crud.crud_customer import customer as customer_operation
+from crud.crud_user import user as user_operation
 
 from schemas import (
     Product as ProductSchema,
     Order as OrderSchema,
     CartItems as CartItemsSchema,
     OrderItems as OrderItemsSchema,
-    Customer as CustomerSchema,
-    CustomerLoginHistory as LoginHistorySchema,
+    User as UserSchema,
+    UserLoginHistory as LoginHistorySchema,
     ResponseOrderList,
     ResponseProductList,
     ResponseCartList
@@ -36,10 +36,10 @@ app.session = scoped_session(
     SessionLocal, scopefunc=_app_ctx_stack.__ident_func__)
 
 # Aa a fake user for debug mode
-fake_customer = {
-    "user_id": 'fake_customer',
-    "username": 'fake_customer',
-    "token": helper.gen_user_token(user_id='fake_customer')
+fake_user = {
+    "user_id": 'fake_user',
+    "username": 'fake_user',
+    "token": helper.gen_user_token(user_id='fake_user')
 }
 
 @app.route('/')
@@ -84,18 +84,18 @@ def user_signup():
     email = register_info.get('email')
 
     # verify user existence
-    if customer_operation.get(db=app.session, filter_dict={"customer_name": username}):
+    if user_operation.get(db=app.session, filter_dict={"username": username}):
         raise Exception('User exists, please naming other username')
 
     # create user
     hashed_password = helper.hash_password(password)
-    customer = CustomerSchema(
-        customer_id=str(uuid.uuid4()),
-        customer_name=username,
-        hashed_password=hashed_password,
+    user = UserSchema(
+        user_id=str(uuid.uuid4()),
+        username=username,
+        password=hashed_password,
         email=email,
     )
-    customer_operation.create(db=app.session, obj_in=customer)
+    user_operation.create(db=app.session, obj_in=user)
 
     return jsonify({
         "message": f"Success to register user: {username}"
@@ -113,26 +113,26 @@ def user_login():
         "message": f"Login success: {username}"
     }
 
-    # get fake customer for debug mode
+    # get fake user for debug mode
     if config.DEBUG_MODE:
-        resp['token'] = fake_customer.get("token")
+        resp['token'] = fake_user.get("token")
         return jsonify(resp)
 
     # verify user existence and user password
-    customer = customer_operation.get(db=app.session, filter_dict={"customer_name": username})
-    if not customer:
+    user = user_operation.get(db=app.session, filter_dict={"username": username})
+    if not user:
         raise Exception('User not found, please register first')
-    if not helper.verify_password(password=password, hashed_password=customer.hashed_password):
+    if not helper.verify_password(password=password, hashed_password=user.hashed_password):
         raise Exception('Invalid passsword, please insert right password')
 
     # record user login history
     login_history = LoginHistorySchema(
-        customer_id=customer.customer_id,
+        user_id=user.user_id,
         login_time=datetime.datetime.now(),
         login_status='login',
         ip_address=request.remote_addr,
     )
-    customer_operation.create_login_history(db=app.session, obj_in=login_history)
+    user_operation.create_login_history(db=app.session, obj_in=login_history)
     resp['token'] = helper.gen_user_token(user_id=username)
     return jsonify(resp)
 
@@ -173,7 +173,7 @@ def get_product(product_id):
 def add_cart():
     """加入單項產品至購物車"""
     try:
-        username = fake_customer.get("user_id") if config.DEBUG_MODE else None
+        username = fake_user.get("user_id") if config.DEBUG_MODE else None
         body = request.json
         product_id = body.get('product_id')
         product_qty = body.get('product_qty')
@@ -236,7 +236,7 @@ def get_cart_list():
         ).dict()
 
         # add cart token to target user shopping cart
-        resp['cart_token'] = helper.gen_shopping_cart_token(fake_customer.get("user_id"))
+        resp['cart_token'] = helper.gen_shopping_cart_token(fake_user.get("user_id"))
 
         return jsonify(resp)
     except Exception:
@@ -248,7 +248,7 @@ def order():
     """結帳"""
     try:
         # assume decoded token can get user_id
-        customer_id = 'tmp_test'
+        user_id = 'tmp_test'
         total_price = 0
         order_id = str(uuid.uuid4())
         order_date = datetime.datetime.now()
@@ -275,7 +275,7 @@ def order():
         # create order
         order_operation.create(db=app.session, obj_in=OrderSchema(
             order_id=order_id,
-            customer_id=customer_id,
+            user_id=user_id,
             total_price=total_price,
             order_date=order_date
         ))
