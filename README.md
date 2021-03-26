@@ -153,22 +153,11 @@
           "product_qty": 0,
           "product_price": "",
         }],
-        "total": 0
+        "total_price": 0
       }
       ```
 #### 訂單管理
 - POST `/api/v1/order` 結帳
-  - request:
-    ```json
-    {
-      "shopping_cart":[
-        {
-          "product_id": "",
-          "product_qty": 0
-        },
-      ]
-    }
-    ```
   - response:
     ```json
     {
@@ -184,8 +173,8 @@
     {
       "data": [{
         "order_id": "",
-        "order_amount": "",
-        "order_date": ""
+        "order_date": "",
+        "total_price": 0
       }],
       "current_page": 0,
       "current_count":0,
@@ -247,7 +236,7 @@
   - order_id 訂單編號 VARCHAR(50) (PK)
   - customer_id 客戶編號 VARCHAR(50) (FK)
   - total_price 總價格 INT, NOT NULL
-  - order_time 訂購時間 DATETIME, NOT NULL
+  - order_date 訂購時間 DATETIME, NOT NULL
 
 - order_items
   - id 流水號 (PK)

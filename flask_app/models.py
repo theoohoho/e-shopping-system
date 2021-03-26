@@ -58,7 +58,7 @@ class Order(Base):
     order_id = Column(VARCHAR(50), primary_key=True)
     customer_id = Column(VARCHAR(50), ForeignKey('customer.customer_id'))
     total_price = Column(Integer, nullable=False)
-    order_time = Column(DateTime, nullable=False)
+    order_date = Column(DateTime, nullable=False)
 
     order_items = relationship('OrderItems', backref='order')
 

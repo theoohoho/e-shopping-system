@@ -251,7 +251,7 @@ def order():
         customer_id = 'tmp_test'
         total_price = 0
         order_id = str(uuid.uuid4())
-        order_time = datetime.datetime.now()
+        order_date = datetime.datetime.now()
         db_query = cart_items_operation.get_cart_item_with_product(db=app.session)
 
         # transfer each cart_item to be order_item
@@ -267,6 +267,9 @@ def order():
             ))
             # after cart_item transfer to order_item, should deleted it
             app.session.delete(cart_item)
+            # deduct order quantity
+            product.store_pcs -= cart_item.product_qty
+
         order_operation.add_order_items(db=app.session, obj_in=order_items)
 
         # create order
@@ -274,14 +277,14 @@ def order():
             order_id=order_id,
             customer_id=customer_id,
             total_price=total_price,
-            order_time=order_time
+            order_date=order_date
         ))
 
         app.session.commit()
 
         return jsonify({
             "order_id": order_id,
-            "order_date": str(order_time),
+            "order_date": str(order_date),
             "message": "Success"
         })
     except Exception:
@@ -299,7 +302,7 @@ def get_order_list():
             "order_amount": "",
             "order_date": ""
         }],
-        "page": 1,
+        "current_page": 1,
         "current_count": len(result),
         "total_count": len(result)
     }
@@ -328,7 +331,7 @@ def get_favorite_list():
             "product_type": "",
             "image_url": ""
         }],
-        "page": 0,
+        "current_page": 0,
         "current_count": 0,
         "total_count": 0
     })

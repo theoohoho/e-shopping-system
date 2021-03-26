@@ -40,7 +40,7 @@ class Order(BaseModel):
     order_id: str
     customer_id: str
     total_price: int
-    order_time: datetime
+    order_date: datetime
 
 
 class OrderItems(BaseModel):
