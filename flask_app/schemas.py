@@ -52,7 +52,7 @@ class OrderItems(BaseModel):
 
 
 class CartItems(BaseModel):
-    customer_id: str
+    cart_id: str
     product_id: str
     product_qty: int
 
