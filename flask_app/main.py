@@ -225,6 +225,8 @@ def order():
                 quantity=cart_item.product_qty,
                 price=order_item_total_price
             ))
+            # after cart_item transfer to order_item, should deleted it
+            app.session.delete(cart_item)
         order_operation.add_order_items(db=app.session, obj_in=order_items)
 
         # create order
