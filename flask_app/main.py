@@ -25,7 +25,7 @@ from schemas import (
 )
 
 import config
-from utils import helper
+from utils import helper, auth_operations
 
 app = Flask(__name__)
 app.config.update(JSON_AS_ASCII=False)
@@ -42,6 +42,7 @@ fake_user = {
     "username": 'fake_user',
     "token": helper.gen_user_token(user_id='fake_user')
 }
+
 
 @app.route('/')
 def hello_world():
@@ -139,7 +140,8 @@ def user_login():
 
 
 @app.route('/api/v1/logout', methods=["POST"])
-def user_logout():
+@auth_operations.user_token_verification
+def user_logout(parsed_info: dict):
     """登出會員"""
     return jsonify({
         "username": '',
@@ -171,10 +173,11 @@ def get_product(product_id):
 
 
 @app.route('/api/v1/cart', methods=["POST"])
-def add_cart():
+@auth_operations.user_token_verification
+def add_cart(parsed_info: dict):
     """加入單項產品至購物車"""
     try:
-        username = fake_user.get("user_id") if config.DEBUG_MODE else None
+        cart_id = parsed_info.get('cart_id')
         body = request.json
         product_id = body.get('product_id')
         product_qty = body.get('product_qty')
@@ -191,13 +194,13 @@ def add_cart():
         # create cart_items or update product quantity in cart_items
         cart_item = cart_items_operation.get(db=app.session, filter_dict={
             'product_id': product_id,
-            'cart_id': username
+            'cart_id': cart_id
         })
         if not cart_item:
             new_cart_item = CartItemsSchema(
                 product_id=product_id,
                 product_qty=product_qty,
-                cart_id=username
+                cart_id=cart_id
             )
             cart_items_operation.create(db=app.session, obj_in=new_cart_item)
         else:
@@ -214,12 +217,14 @@ def add_cart():
 
 
 @app.route('/api/v1/cart', methods=["GET"])
-def get_cart_list():
+@auth_operations.user_token_verification
+def get_cart_list(parsed_info: dict):
     """取得購物車內容"""
     try:
         query_result = []
         total_price = 0
-        db_query = cart_items_operation.get_cart_item_with_product(app.session)
+        cart_id = parsed_info.get('cart_id')
+        db_query = cart_items_operation.get_cart_item_with_product(db=app.session, cart_id=cart_id)
 
         for cart_item, product in db_query:
             product_total_price = cart_item.product_qty * product.price
@@ -237,7 +242,7 @@ def get_cart_list():
         ).dict()
 
         # add cart token to target user shopping cart
-        resp['cart_token'] = helper.gen_shopping_cart_token(fake_user.get("user_id"))
+        resp['cart_token'] = helper.gen_shopping_cart_token(cart_id=str(uuid.uuid4())[:8])
 
         return jsonify(resp)
     except Exception:
@@ -245,15 +250,17 @@ def get_cart_list():
 
 
 @app.route('/api/v1/order', methods=["POST"])
-def order():
+@auth_operations.user_token_verification
+def order(parsed_info: dict):
     """結帳"""
     try:
         # assume decoded token can get user_id
-        user_id = 'tmp_test'
-        total_price = 0
+        user_id = parsed_info.get('user_id')
+        cart_id = parsed_info.get('cart_id')
         order_id = str(uuid.uuid4())
         order_date = datetime.datetime.now()
-        db_query = cart_items_operation.get_cart_item_with_product(db=app.session)
+        total_price = 0
+        db_query = cart_items_operation.get_cart_item_with_product(db=app.session, cart_id=cart_id)
 
         # transfer each cart_item to be order_item
         order_items = []
@@ -293,9 +300,11 @@ def order():
 
 
 @app.route('/api/v1/order', methods=["GET"])
-def get_order_list():
+@auth_operations.user_token_verification
+def get_order_list(parsed_info: dict):
     """取得訂單列表"""
-    orders = order_operation.get_all(app.session)
+    user_id = parsed_info.get('user_id')
+    orders = order_operation.get_all(db=app.session, filter_dict={"user_id": user_id})
     result = [OrderSchema(**order.__dict__).dict() for order in orders]
     output_format = {
         "data": [{
@@ -312,9 +321,10 @@ def get_order_list():
 
 
 @app.route('/api/v1/favorite', methods=["POST"])
-def tag_favorite():
+@auth_operations.user_token_verification
+def tag_favorite(parsed_info: dict):
     """加入產品至會員收藏"""
-    user_id = fake_user.get("user_id") if config.DEBUG_MODE else None
+    user_id = parsed_info.get("user_id")
     favorite_info = request.json
     product_id = favorite_info.get("product_id")
 
@@ -330,9 +340,10 @@ def tag_favorite():
 
 
 @app.route('/api/v1/favorite', methods=["DELETE"])
-def delete_favorite():
+@auth_operations.user_token_verification
+def delete_favorite(parsed_info: dict):
     """移除會員單一收藏"""
-    user_id = fake_user.get("user_id") if config.DEBUG_MODE else None
+    user_id = parsed_info.get("user_id")
     favorite_info = request.json
     product_id = favorite_info.get("product_id")
     user_operation.remove_user_favorite(db=app.session, filter_dict=dict(user_id=user_id, product_id=product_id))
@@ -342,9 +353,10 @@ def delete_favorite():
 
 
 @app.route('/api/v1/favorite', methods=["GET"])
-def get_favorite_list():
+@auth_operations.user_token_verification
+def get_favorite_list(parsed_info: dict):
     """會員收藏列表"""
-    user_id = fake_user.get("user_id") if config.DEBUG_MODE else None
+    user_id = parsed_info.get("user_id")
     user_favorites = user_operation.get_all_user_favorites(db=app.session, user_id=user_id)
     query_result = [ProductSchema(**product.__dict__).dict() for product in user_favorites]
     return jsonify({ 
