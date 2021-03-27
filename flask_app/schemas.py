@@ -17,6 +17,11 @@ class UserLoginHistory(BaseModel):
     ip_address: str
 
 
+class UserFavoriteProduct(BaseModel):
+    product_id: str
+    user_id: str
+
+
 class Product(BaseModel):
     product_id: str
     product_name: str

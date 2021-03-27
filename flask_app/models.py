@@ -80,3 +80,11 @@ class CartItems(Base):
     cart_id = Column(VARCHAR(50), nullable=False)
     product_id = Column(VARCHAR(40), nullable=False)
     product_qty = Column(Integer)
+
+
+class UserFavoriteProduct(Base):
+    __tablename__ = 'user_favorite_product'
+
+    id = Column(Integer, primary_key=True)
+    product_id = Column(VARCHAR(40))
+    user_id = Column(VARCHAR(50))
