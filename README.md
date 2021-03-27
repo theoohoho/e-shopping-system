@@ -156,6 +156,27 @@
         "total_price": 0
       }
       ```
+- PATCH `/api/v1/cart` 更新購物車內單項產品數量
+  - request:
+    ```json
+    {
+      "product_id": "",
+      "product_qty": 0,
+    }
+    ```
+  - response:
+      ```json
+      {
+        "message": "Success"
+      }
+      ```
+- DELETE `/api/v1/cart` 清除購物車
+  - response:
+      ```json
+      {
+        "message": "Success"
+      }
+      ```
 #### 訂單管理
 - POST `/api/v1/order` 結帳
   - response:

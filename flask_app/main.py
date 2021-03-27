@@ -182,7 +182,7 @@ def add_cart(parsed_info: dict):
         product_id = body.get('product_id')
         product_qty = body.get('product_qty')
         if not product_qty or not product_id:
-            raise Exception('Request body is empty, please check your request message')
+            raise Exception('Invalid request body, please check your request message')
 
         # check product quantity is valid
         product = product_operation.get(db=app.session, filter_dict={
@@ -214,6 +214,62 @@ def add_cart(parsed_info: dict):
         })
     except Exception:
         raise
+
+
+@app.route('/api/v1/cart', methods=["PATCH"])
+@auth_operations.user_token_verification
+def update_cart(parsed_info: dict):
+    """Update cart item"""
+    cart_id = parsed_info.get('cart_id')
+    shopping_cart_info = request.json
+    product_id = shopping_cart_info.get('product_id')
+    product_qty = shopping_cart_info.get('product_qty')
+    if not product_id or product_qty < 0:
+        raise Exception('Invalid request body, please check your request message')
+
+    # check cart_item existence
+    cart_item = cart_items_operation.get(db=app.session, filter_dict={
+        'product_id': product_id,
+        'cart_id': cart_id
+    })
+    if not cart_item:
+        raise Exception('cart item not found, please check product_id is valid or exist in shopping cart')
+
+    # check product quantity is valid
+    product = product_operation.get(db=app.session, filter_dict={
+        'product_id': product_id
+    })
+    if product_qty > product.store_pcs:
+        raise Exception('Product haven\'t enough piece to buy')
+
+    # update cart item info, if item qty is equal to 0, item should be deleted
+    cart_item.product_qty = product_qty
+    if not product_qty:
+        app.session.delete(cart_item)
+    app.session.commit()
+
+    return jsonify({
+        "message": f"Updated cart item, product_id: {product_id}"
+    })
+
+
+@app.route('/api/v1/cart', methods=["DELETE"])
+@auth_operations.user_token_verification
+def delete_cart(parsed_info: dict):
+    """Delete cart"""
+    cart_id = parsed_info.get('cart_id')
+
+    # check cart_item existence
+    cart_item = cart_items_operation.get(db=app.session, filter_dict={"cart_id": cart_id})
+    if not cart_item:
+        raise Exception('cart item not found, please check product_id is valid or exist in shopping cart')
+
+    # delete cart item
+    cart_items_operation.remove(db=app.session, filter_dict={"cart_id": cart_id})
+
+    return jsonify({
+        "message": f"Remove shopping cart, cart_id: {cart_id}"
+    })
 
 
 @app.route('/api/v1/cart', methods=["GET"])
