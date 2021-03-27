@@ -181,12 +181,30 @@
       "total_count":0
     }
     ```
-- POST `/api/v1/product/{product_id}/favorite` 加入產品至會員收藏
+- POST `/api/v1/favorite` 加入產品至會員收藏
+  - request:
+      ```json
+      {
+        "product_id": ""
+      }
+      ```
   - response:
       ```json
       {
-        "product_id": "",
-        "message": "Success to add a new collect"
+        "message": "Success to add a new favorite: {product_id}"
+      }
+      ```
+- DELETE `/api/v1/favorite` 移除單項產品收藏
+  - request:
+      ```json
+      {
+        "product_id": ""
+      }
+      ```
+  - response:
+      ```json
+      {
+        "message": "Delete a favorite product: {product_id}"
       }
       ```
 - GET `/api/v1/favorite` 會員收藏列表
