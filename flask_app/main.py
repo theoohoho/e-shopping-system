@@ -18,6 +18,7 @@ from schemas import (
     OrderItems as OrderItemsSchema,
     User as UserSchema,
     UserLoginHistory as LoginHistorySchema,
+    UserFavoriteProduct as UserFavoriteProductSchema,
     ResponseOrderList,
     ResponseProductList,
     ResponseCartList
@@ -310,30 +311,47 @@ def get_order_list():
     return jsonify(output_format)
 
 
-@app.route('/api/v1/product/<string:product_id>/favorite', methods=["POST"])
-def tag_favorite(product_id):
+@app.route('/api/v1/favorite', methods=["POST"])
+def tag_favorite():
     """加入產品至會員收藏"""
-    print(request.json)
+    user_id = fake_user.get("user_id") if config.DEBUG_MODE else None
+    favorite_info = request.json
+    product_id = favorite_info.get("product_id")
+
+    # verify product existence in favorite collection
+    if user_operation.get_one_user_favorite(db=app.session, user_id=user_id, product_id=product_id):
+        raise Exception(f"Already add product {product_id} into favorite collection")
+
+    new_favorite = UserFavoriteProductSchema(user_id=user_id, product_id=product_id)
+    user_operation.create_user_favorite(db=app.session, obj_in=new_favorite)
     return jsonify({
-        "product_id": "",
-        "message": "Success to add a new collect"
+        "message": f"Success to add a new favorite: {product_id}"
+    })
+
+
+@app.route('/api/v1/favorite', methods=["DELETE"])
+def delete_favorite():
+    """移除會員單一收藏"""
+    user_id = fake_user.get("user_id") if config.DEBUG_MODE else None
+    favorite_info = request.json
+    product_id = favorite_info.get("product_id")
+    user_operation.remove_user_favorite(db=app.session, filter_dict=dict(user_id=user_id, product_id=product_id))
+    return jsonify({
+        "message": f"Delete a favorite: {product_id}"
     })
 
 
 @app.route('/api/v1/favorite', methods=["GET"])
 def get_favorite_list():
     """會員收藏列表"""
-    return jsonify({
-        "data": [{
-            "product_id": "",
-            "product_name": "",
-            "product_price": "",
-            "product_type": "",
-            "image_url": ""
-        }],
-        "current_page": 0,
-        "current_count": 0,
-        "total_count": 0
+    user_id = fake_user.get("user_id") if config.DEBUG_MODE else None
+    user_favorites = user_operation.get_all_user_favorites(db=app.session, user_id=user_id)
+    query_result = [ProductSchema(**product.__dict__).dict() for product in user_favorites]
+    return jsonify({ 
+        "data": query_result,
+        "current_page": 1,
+        "current_count": len(query_result),
+        "total_count": len(query_result)
     })
 
 
