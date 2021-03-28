@@ -153,6 +153,9 @@
           "product_name": "",
           "product_qty": 0,
           "product_price": "",
+          "image_url": "",
+          "product_type": "",
+          "product_total_price": 0
         }],
         "total_price": 0
       }

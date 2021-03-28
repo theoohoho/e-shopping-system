@@ -93,3 +93,14 @@ class ResponseCartList(BaseModel):
     """
     data: List[dict]
     total_price: int
+
+
+class CartItemDetail(BaseModel):
+    """The response of the cart item detail of list"""
+    product_id: str
+    product_name: str
+    product_type: str
+    product_qty: int
+    product_price: int
+    product_total_price: int
+    image_url: str

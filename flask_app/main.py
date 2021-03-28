@@ -17,6 +17,7 @@ from schemas import (
     CartItems as CartItemsSchema,
     OrderItems as OrderItemsSchema,
     User as UserSchema,
+    CartItemDetail,
     UserLoginHistory as LoginHistorySchema,
     UserFavoriteProduct as UserFavoriteProductSchema,
     ResponseOrderList,
@@ -180,7 +181,7 @@ def add_cart(parsed_info: dict):
         cart_id = parsed_info.get('cart_id')
         body = request.json
         product_id = body.get('product_id')
-        product_qty = body.get('product_qty')
+        product_qty = body.get('product_qty') 
         if not product_qty or not product_id:
             raise Exception('Invalid request body, please check your request message')
 
@@ -290,12 +291,12 @@ def get_cart_list(parsed_info: dict):
         for cart_item, product in db_query:
             product_total_price = cart_item.product_qty * product.price
             total_price += product_total_price
-            query_result.append({
-                "product_id": cart_item.product_id,
-                "product_name": product.product_name,
-                "product_qty": cart_item.product_qty,
-                "product_total_price": product_total_price,
-            })
+            query_result.append(CartItemDetail(
+                **product.__dict__,
+                product_qty=cart_item.product_qty,
+                product_price=product.price,
+                product_total_price=product_total_price,
+            ))
 
         resp = ResponseCartList(
             data=query_result,
