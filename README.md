@@ -170,10 +170,17 @@
         "message": "Success"
       }
       ```
-- DELETE `/api/v1/cart` 清除購物車
+- DELETE `/api/v1/cart` 移除購物車內單項產品
+  - request:
+      ```json
+      {
+        "product_id": ""
+      }
+      ```
   - response:
       ```json
       {
+        "product_id": "",
         "message": "Success"
       }
       ```
