@@ -210,6 +210,7 @@ def add_cart(parsed_info: dict):
             app.session.commit()
 
         return jsonify({
+            "product_id": product_id,
             "message": "Success to add product into shopping cart, please check your shopping cart"
         })
     except Exception:
@@ -247,7 +248,8 @@ def update_cart(parsed_info: dict):
     app.session.commit()
 
     return jsonify({
-        "message": f"Updated cart item, product_id: {product_id}"
+        "product_id": product_id,
+        "message": "Updated shopping cart item success"
     })
 
 

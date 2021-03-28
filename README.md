@@ -140,6 +140,7 @@
   - response:
       ```json
       {
+        "product_id": "",
         "message": "Success"
       }
       ```
@@ -167,6 +168,7 @@
   - response:
       ```json
       {
+        "product_id": "",
         "message": "Success"
       }
       ```
