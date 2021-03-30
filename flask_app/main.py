@@ -10,6 +10,7 @@ from crud.crud_product import product as product_operation
 from crud.crud_order import order as order_operation
 from crud.crud_cart_items import cart_items as cart_items_operation
 from crud.crud_user import user as user_operation
+from crud.crud_coupon import coupon as coupon_operation
 
 from schemas import (
     Product as ProductSchema,
@@ -17,12 +18,14 @@ from schemas import (
     CartItems as CartItemsSchema,
     OrderItems as OrderItemsSchema,
     User as UserSchema,
+    Coupon as CouponSchema,
     CartItemDetail,
     UserLoginHistory as LoginHistorySchema,
     UserFavoriteProduct as UserFavoriteProductSchema,
     ResponseOrderList,
     ResponseProductList,
-    ResponseCartList
+    ResponseCartList,
+    RespCouponInfo
 )
 
 import config
@@ -41,7 +44,11 @@ app.session = scoped_session(
 fake_user = {
     "user_id": 'fake_user',
     "username": 'fake_user',
-    "token": helper.gen_user_token(user_id='fake_user')
+    "token": helper.gen_user_token(user_id='fake_user'),
+    "coupon_code": 'test',
+    "coupon_name": "測試折扣券",
+    "coupon_discount": 0.7,
+    "coupon_enabled": False
 }
 
 
@@ -285,9 +292,22 @@ def get_cart_list(parsed_info: dict):
     try:
         query_result = []
         total_price = 0
+        coupon_discount = 1
+        resp_coupon_info = {}
         cart_id = parsed_info.get('cart_id')
-        db_query = cart_items_operation.get_cart_item_with_product(db=app.session, cart_id=cart_id)
+        user_id = parsed_info.get('user_id')
 
+        # verify enabled coupon existence
+        coupon_info, user_coupon = coupon_operation.find_enabled_user_coupon(
+            db=app.session,
+            user_id=user_id,
+            enabled=True
+        )
+        if user_coupon:
+            coupon_discount = coupon_info.discount = float(coupon_info.discount)
+            resp_coupon_info = RespCouponInfo(**coupon_info.__dict__)
+
+        db_query = cart_items_operation.get_cart_item_with_product(db=app.session, cart_id=cart_id)
         for cart_item, product in db_query:
             product_total_price = cart_item.product_qty * product.price
             total_price += product_total_price
@@ -296,11 +316,16 @@ def get_cart_list(parsed_info: dict):
                 product_qty=cart_item.product_qty,
                 product_price=product.price,
                 product_total_price=product_total_price,
+                product_discount_price=product_total_price*(1-coupon_discount),
+                product_final_price=product_total_price*coupon_discount
             ))
 
         resp = ResponseCartList(
             data=query_result,
-            total_price=total_price
+            coupon_info=resp_coupon_info,
+            total_price=total_price,
+            discount_price=total_price*(1-coupon_discount),
+            final_price=total_price*coupon_discount
         ).dict()
 
         # add cart token to target user shopping cart
@@ -428,6 +453,60 @@ def get_favorite_list(parsed_info: dict):
         "total_count": len(query_result)
     })
 
+
+@app.route('/api/v1/coupon', methods=["PATCH"])
+@auth_operations.user_token_verification
+def set_coupon(parsed_info: dict):
+    """Set coupon to usage"""
+    user_id = parsed_info.get("user_id")
+    enabled: bool = request.json.get("enabled")
+    coupon_code = request.json.get("coupon_code")
+
+    # verify coupon existence and validation
+    coupon_info, user_coupon = coupon_operation.get_user_coupon(
+        db=app.session,
+        user_id=user_id,
+        coupon_code=coupon_code
+    )
+    if not coupon_info:
+        raise Exception('Coupon not found, please confirm coupon code is valid')
+    elif not coupon_info.is_valid:
+        raise Exception('Invalid coupon')
+    elif coupon_info.is_expired:
+        raise Exception('Coupon is expired')
+
+    # update user coupon enable
+    user_coupon.enabled = int(enabled)
+    app.session.commit()
+
+    return jsonify({
+        "coupon_code": coupon_info.coupon_code,
+        "enabled": user_coupon.enabled,
+        "message": f"Updated coupon status to { 'enabled' if user_coupon.enabled else 'disabled'}"
+    })
+
+
+@app.route('/api/v1/coupon/<string:coupon_code>', methods=["GET"])
+@auth_operations.user_token_verification
+def get_coupon(parsed_info: dict, coupon_code: str):
+    """折扣資訊"""
+    try:
+        user_id = parsed_info.get("user_id")
+        coupon_info = coupon_operation.get(
+            db=app.session,
+            filter_dict={"coupon_code": coupon_code}
+        )
+
+        if not coupon_info.coupon_code:
+            raise Exception('Invalid coupon code, please confirm coupon code')
+
+        return jsonify({
+            "discount": float(coupon_info.discount),
+            "coupon_code": coupon_info.coupon_code,
+            "message": "Get coupon information success"
+        })
+    except Exception:
+        raise
 
 @app.teardown_appcontext
 def remove_session(*args, **kwargs):

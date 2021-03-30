@@ -155,9 +155,18 @@
           "product_price": "",
           "image_url": "",
           "product_type": "",
-          "product_total_price": 0
+          "product_total_price": 0,
+          "product_discount_price": 0,
+          "product_final_price": 0
         }],
-        "total_price": 0
+        "coupon_info": {
+          "coupon_code": "",
+          "coupon_name": "",
+          "discount": 0
+        },
+        "total_price": 0,
+        "discount_price": 0,
+        "final_price": 0
       }
       ```
 - PATCH `/api/v1/cart` 更新購物車內單項產品數量
@@ -214,6 +223,31 @@
       "total_count":0
     }
     ```
+- GET `/api/v1/coupon/{coupon_code}` 取得折扣資訊
+  - response:
+    ```json
+    {
+      "discount": 0,
+      "coupon_code": "",
+      "message": "Get coupon information success"
+    }
+    ```
+- PATCH `/api/v1/coupon` 更新折扣券啟用狀態
+  - request:
+      ```json
+      {
+        "coupon_code": "",
+        "enabled": false
+      }
+      ```
+  - response:
+      ```json
+      {
+        "coupon_code": "",
+        "enabled": false,
+        "message": "Updated coupon status to disabled"
+    }
+      ```
 - POST `/api/v1/favorite` 加入產品至會員收藏
   - request:
       ```json

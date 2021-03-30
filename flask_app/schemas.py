@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Union
 from datetime import datetime
 
 
@@ -61,7 +61,18 @@ class CartItems(BaseModel):
     product_qty: int
 
 
-# Defined response pydantic model
+class Coupon(BaseModel):
+    coupon_code: str
+    coupon_name: str
+    coupon_qty: int
+    discount: str
+    begin_time: datetime
+    end_time: datetime
+    create_time: datetime
+    status: int
+    description: str
+
+# Defined api response pydantic model
 class BasePagnation(BaseModel):
     data: List[Any]
     current_page: int = 1
@@ -75,6 +86,13 @@ class ResponseProductList(BasePagnation):
 
 class ResponseOrderList(BasePagnation):
     data: List[Order]
+
+
+class RespCouponInfo(BaseModel):
+    """The coupon info in the response of shopping cart list"""
+    coupon_code: str
+    coupon_name: str
+    discount: int
 
 
 class ResponseCartList(BaseModel):
@@ -92,7 +110,10 @@ class ResponseCartList(BaseModel):
     }
     """
     data: List[dict]
+    coupon_info: Union[RespCouponInfo, dict]
     total_price: int
+    discount_price: int
+    final_price: int
 
 
 class CartItemDetail(BaseModel):
@@ -103,4 +124,6 @@ class CartItemDetail(BaseModel):
     product_qty: int
     product_price: int
     product_total_price: int
+    product_discount_price: int
+    product_final_price: int
     image_url: str
