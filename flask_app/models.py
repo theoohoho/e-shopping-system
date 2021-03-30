@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, DateTime, ForeignKey, String
 from sqlalchemy.types import VARCHAR, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-
+import datetime
 Base = declarative_base()
 
 
@@ -88,3 +88,53 @@ class UserFavoriteProduct(Base):
     id = Column(Integer, primary_key=True)
     product_id = Column(VARCHAR(40))
     user_id = Column(VARCHAR(50))
+
+
+class Coupon(Base):
+    __tablename__ = 'coupon'
+
+    id = Column(Integer, primary_key=True)
+    coupon_code = Column(VARCHAR(15), unique=True, index=True)
+    coupon_name = Column(VARCHAR(30))
+    coupon_qty = Column(Integer)
+    discount = Column(String)
+    begin_time = Column(DateTime)
+    end_time = Column(DateTime)
+    create_time = Column(DateTime)
+    status = Column(Integer, default=0)  # 0 means disable, 1 means enable
+    description = Column(String)
+
+    @property
+    def is_valid(self) -> bool:
+        curr_time = datetime.datetime.now()
+        if not self.status and \
+            self.begin_time >= curr_time and \
+                self.end_time <= curr_time:
+            return False
+        return True
+
+    @property
+    def is_expired(self) -> bool:
+        """Verify coupon expiration"""
+        if self.end_time <= datetime.datetime.now():
+            return True
+        return False
+
+
+class CouponReceive(Base):
+    __tablename__ = 'coupon_receive'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(VARCHAR(50))
+    coupon_id = Column(Integer)
+    receive_time = Column(DateTime)
+    status = Column(Integer, default=0)
+    enabled = Column(Integer, default=0)  # 0 means disable, 1 means enable
+
+
+class CouponUsageLog(Base):
+    __tablename__ = 'coupon_usage_log'
+
+    id = Column(Integer, primary_key=True)
+    order_id = Column(VARCHAR(50))
+    coupon_id = Column(Integer)
