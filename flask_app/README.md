@@ -1,5 +1,10 @@
 # E-Shopping system with Flask
 
+## TODO
+- [] Add exception handler
+- [] Implement user login token record
+- [] Add Redis as session data store
+- [] Refactor api router, used flask blue print to build application structure 
 ## Requirement
 
 - Python 3.7
