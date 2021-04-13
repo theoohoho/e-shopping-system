@@ -223,6 +223,34 @@
       "total_count":0
     }
     ```
+- GET `/api/v1/order/{order_id}` 取得訂單明細
+  - response:
+    ```json
+    {
+      "coupon_info": {
+        "coupon_code": "",
+        "coupon_name": "",
+        "discount": 0.7
+      }, 
+      "order_info": {
+        "coupon_code": "", 
+        "order_date": "", 
+        "order_id": "", 
+        "total_price": 0, 
+        "user_id": ""
+      },
+      "order_items": [
+        {
+          "image_url": "", 
+          "order_id": "",
+          "price": 0, 
+          "product_id": "", 
+          "product_name": "",
+          "quantity": 0
+        },...
+      ]
+    }
+    ```
 - GET `/api/v1/coupon/{coupon_code}` 取得折扣資訊
   - response:
     ```json

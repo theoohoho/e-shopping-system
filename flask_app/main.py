@@ -25,7 +25,9 @@ from schemas import (
     ResponseOrderList,
     ResponseProductList,
     ResponseCartList,
-    RespCouponInfo
+    RespCouponInfo,
+    RespOrderInfo,
+    RespOrderItems
 )
 
 import config
@@ -413,6 +415,30 @@ def get_order_list(parsed_info: dict):
     }
     output_format['data'] = result
     return jsonify(output_format)
+
+
+@app.route('/api/v1/order/<string:order_id>', methods=["GET"])
+@auth_operations.user_token_verification
+def get_order_info(parsed_info: dict, order_id: str):
+    """取得訂單細節"""
+    user_id = parsed_info.get('user_id')
+    query_results = order_operation.get_order_info(db=app.session, order_id=order_id)
+
+    order_items = []
+    order, coupon_name, discount, _, _, _ = query_results[0]
+    for _, _, _, order_item, product_name, image_url in query_results:
+        order_items.append(RespOrderItems(**order_item.__dict__, product_name=product_name, image_url=image_url))
+
+    resp = RespOrderInfo(
+        order_info=OrderSchema(**order.__dict__),
+        order_items=order_items,
+        coupon_info=RespCouponInfo(
+            coupon_code=order.coupon_code,
+            coupon_name=coupon_name,
+            discount=discount
+        )
+    ).dict()
+    return jsonify(resp)
 
 
 @app.route('/api/v1/favorite', methods=["POST"])

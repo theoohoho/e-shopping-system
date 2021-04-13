@@ -128,3 +128,16 @@ class CartItemDetail(BaseModel):
     product_discount_price: int
     product_final_price: int
     image_url: str
+
+
+class RespOrderItems(OrderItems):
+    """The response of order items"""
+    product_name: str
+    image_url: str
+
+
+class RespOrderInfo(BaseModel):
+    """ The response of order infomation"""
+    order_info: Order
+    order_items: List[RespOrderItems]
+    coupon_info: Union[RespCouponInfo, dict]
