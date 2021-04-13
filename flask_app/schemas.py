@@ -46,6 +46,7 @@ class Order(BaseModel):
     user_id: str
     total_price: int
     order_date: datetime
+    coupon_code: str
 
 
 class OrderItems(BaseModel):
@@ -92,7 +93,7 @@ class RespCouponInfo(BaseModel):
     """The coupon info in the response of shopping cart list"""
     coupon_code: str
     coupon_name: str
-    discount: int
+    discount: float
 
 
 class ResponseCartList(BaseModel):

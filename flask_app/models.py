@@ -59,6 +59,7 @@ class Order(Base):
     user_id = Column(VARCHAR(50), ForeignKey('user.user_id'))
     total_price = Column(Integer, nullable=False)
     order_date = Column(DateTime, nullable=False)
+    coupon_code = Column(VARCHAR(15))
 
     order_items = relationship('OrderItems', backref='order')
 

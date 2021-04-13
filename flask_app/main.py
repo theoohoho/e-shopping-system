@@ -346,13 +346,24 @@ def order(parsed_info: dict):
         cart_id = parsed_info.get('cart_id')
         order_id = str(uuid.uuid4())
         order_date = datetime.datetime.now()
-        total_price = 0
+        total_price, coupon_discount = 0, 1
+        coupon_code = None
         db_query = cart_items_operation.get_cart_item_with_product(db=app.session, cart_id=cart_id)
+
+        # verify enabled coupon existence
+        coupon_info, user_coupon = coupon_operation.find_enabled_user_coupon(
+            db=app.session,
+            user_id=user_id,
+            enabled=True
+        )
+        if user_coupon:
+            coupon_discount = coupon_info.discount = float(coupon_info.discount)
+            coupon_code = coupon_info.coupon_code
 
         # transfer each cart_item to be order_item
         order_items = []
         for cart_item, product in db_query:
-            order_item_total_price = cart_item.product_qty * product.price
+            order_item_total_price = (cart_item.product_qty * product.price) * coupon_discount
             total_price += order_item_total_price
             order_items.append(OrderItemsSchema(
                 order_id=order_id,
@@ -372,7 +383,8 @@ def order(parsed_info: dict):
             order_id=order_id,
             user_id=user_id,
             total_price=total_price,
-            order_date=order_date
+            order_date=order_date,
+            coupon_code=coupon_code
         ))
 
         app.session.commit()
@@ -394,11 +406,7 @@ def get_order_list(parsed_info: dict):
     orders = order_operation.get_all(db=app.session, filter_dict={"user_id": user_id})
     result = [OrderSchema(**order.__dict__).dict() for order in orders]
     output_format = {
-        "data": [{
-            "order_id": "",
-            "order_amount": "",
-            "order_date": ""
-        }],
+        "data": [],
         "current_page": 1,
         "current_count": len(result),
         "total_count": len(result)
