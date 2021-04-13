@@ -29,7 +29,7 @@ class CRUDOrder(CRUDBase[Order, OrderSchema]):
             OrderItems, Order.order_id == OrderItems.order_id
         ).join(
             Product, Product.product_id == OrderItems.product_id
-        ).all()
+        ).filter(Order.order_id == order_id).all()
 
 
 order = CRUDOrder(Order)

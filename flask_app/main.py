@@ -422,9 +422,14 @@ def get_order_list(parsed_info: dict):
 def get_order_info(parsed_info: dict, order_id: str):
     """取得訂單細節"""
     user_id = parsed_info.get('user_id')
-    query_results = order_operation.get_order_info(db=app.session, order_id=order_id)
-
     order_items = []
+
+    # verify order existence
+    if not order_operation.get(db=app.session, filter_dict={"order_id": order_id}):
+        raise Exception(f'Order not found: {order_id}')
+
+    # process order items
+    query_results = order_operation.get_order_info(db=app.session, order_id=order_id)
     order, coupon_name, discount, _, _, _ = query_results[0]
     for _, _, _, order_item, product_name, image_url in query_results:
         order_items.append(RespOrderItems(**order_item.__dict__, product_name=product_name, image_url=image_url))
